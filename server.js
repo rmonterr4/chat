@@ -4,7 +4,9 @@ const path = require("path");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-const app = express();
+app.use(cors({
+  origin: "https://chatrm-enb1.onrender.com"
+}));
 
 app.use(cors());
 app.use(express.json());
