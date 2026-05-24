@@ -42,6 +42,18 @@ body {
 #login button:first-of-type { background: #00a884; color: white; }
 #login button:last-of-type  { background: #eee; color: #333; }
 
+#mensaje-auth {
+  font-size: 13px;
+  text-align: center;
+  min-height: 18px;
+  margin: 2px 0 4px;
+  border-radius: 6px;
+  padding: 0;
+  transition: all 0.2s;
+}
+#mensaje-auth.error  { color: #e53935; background: #fdecea; padding: 6px 10px; }
+#mensaje-auth.exito  { color: #2e7d32; background: #e8f5e9; padding: 6px 10px; }
+
 /* LAYOUT */
 #app {
   display: flex;
@@ -349,6 +361,7 @@ body {
   <h3>💬 Chat SaaS</h3>
   <input id="user" placeholder="Usuario">
   <input id="pass" type="password" placeholder="Contraseña">
+  <div id="mensaje-auth"></div>
   <button onclick="login()">Entrar</button>
   <button onclick="registro()">Registrarse</button>
 </div>
@@ -429,10 +442,16 @@ function mostrarSeccion(seccion, tab) {
 }
 
 // AUTENTICACION
+function mostrarMensajeAuth(texto, tipo) {
+  const el = document.getElementById("mensaje-auth");
+  el.textContent = texto;
+  el.className = tipo; // "error" o "exito"
+}
+
 async function login() {
   const username = user.value.trim();
   const password = pass.value.trim();
-  if (!username || !password) return alert("Completa los campos");
+  if (!username || !password) return mostrarMensajeAuth("⚠️ Completa todos los campos", "error");
 
   const res = await fetch("/login", {
     method: "POST",
@@ -443,6 +462,7 @@ async function login() {
   const data = await res.json();
 
   if (res.ok) {
+    mostrarMensajeAuth("", "");
     usuarioActual = data.username || username;
     document.getElementById("usuario").innerText = usuarioActual;
     document.getElementById("login").style.display = "none";
@@ -453,14 +473,14 @@ async function login() {
     cargarUsuarios();
     setTimeout(() => abrirChat(null), 500); // Espera usuarios cargados
   } else {
-    alert(data.error || "Error en login");
+    mostrarMensajeAuth("❌ " + (data.error || "Error en login"), "error");
   }
 }
 
 async function registro() {
   const username = user.value.trim();
   const password = pass.value.trim();
-  if (!username || !password) return alert("Completa los campos");
+  if (!username || !password) return mostrarMensajeAuth("⚠️ Completa todos los campos", "error");
 
   const res = await fetch("/registro", {
     method: "POST",
@@ -471,11 +491,13 @@ async function registro() {
   const data = await res.json();
 
   if (res.ok) {
-    // Se auto loguea despues de que el registro fue exitoso
-    alert("✅ Usuario creado!");
-    login(); // Reutiliza user/pass para login auto
+    mostrarMensajeAuth("✅ Usuario creado exitosamente", "exito");
+    setTimeout(() => {
+      mostrarMensajeAuth("", "");
+      login(); // Auto-login después del registro
+    }, 1500);
   } else {
-    alert(data.error || "Error en registro");
+    mostrarMensajeAuth("❌ " + (data.error || "Error en registro"), "error");
   }
 }
 
