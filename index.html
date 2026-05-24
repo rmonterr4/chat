@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Chat SaaS</title>
+<style>
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #dadbd3;
+}
+
+/* LOGIN */
+#login {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 280px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+#login h3 { margin: 0 0 5px; text-align: center; }
+#login input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+}
+#login button {
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+#login button:first-of-type { background: #00a884; color: white; }
+#login button:last-of-type  { background: #eee; color: #333; }
+
+/* LAYOUT */
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+/* SIDEBAR */
+#sidebar {
+  width: 270px;
+  background: #111b21;
+  color: white;
+  display: flex;
+  flex-direction: column;
+}
+
+#usuario-header {
+  padding: 15px;
+  background: #202c33;
+  font-weight: bold;
+  font-size: 15px;
+}
+
+/* Tabs de navegación */
+#nav-tabs {
+  display: flex;
+  background: #202c33;
+  border-top: 1px solid #2a3942;
+}
+.nav-tab {
+  flex: 1;
+  padding: 10px 5px;
+  text-align: center;
+  cursor: pointer;
+  font-size: 11px;
+  color: #8696a0;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.nav-tab:hover { color: white; }
+.nav-tab.activo { color: #00a884; border-bottom: 2px solid #00a884; }
+
+#usuarios { flex: 1; overflow-y: auto; }
+
+.usuario {
+  padding: 13px 15px;
+  border-bottom: 1px solid #2a3942;
+  cursor: pointer;
+  font-size: 14px;
+}
+.usuario:hover { background: #2a3942; }
+.usuario.activo { background: #2a3942; }
+
+/* AREA PRINCIPAL */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* CHAT */
+#seccion-chat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(to bottom, #f0f2f5 0%, #e5e5e5 100%);
+}
+#chat-header {
+  background: linear-gradient(135deg, #202c33 0%, #2a3942 100%);
+  color: white;
+  padding: 18px 20px;
+  font-weight: 600;
+  font-size: 16px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#chat-header::before {
+  content: '💬';
+  font-size: 20px;
+}
+#mensajes {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  scrollbar-width: thin;
+  scrollbar-color: #00a884 #f0f0f0;
+}
+#mensajes::-webkit-scrollbar {
+  width: 6px;
+}
+#mensajes::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 10px;
+}
+#mensajes::-webkit-scrollbar-thumb {
+  background: #00a884;
+  border-radius: 10px;
+}
+.mensaje {
+  max-width: 70%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 15px;
+  line-height: 1.5;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  position: relative;
+}
+.mensaje::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 8px solid transparent;
+}
+.mio {
+  background: linear-gradient(135deg, #dcf8c6 0%, #a8e6cf 100%);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+  margin-left: 20px;
+}
+.mio::after {
+  left: -10px;
+  bottom: 10px;
+  border-right-color: #dcf8c6;
+}
+.otro {
+  background: linear-gradient(135deg, #ffffff 0%, #f1f1f1 100%);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+  margin-right: 20px;
+}
+.otro::after {
+  right: -10px;
+  bottom: 10px;
+  border-left-color: #ffffff;
+}
+.mensaje b {
+  font-weight: 600;
+  color: #00a884;
+  font-size: 13px;
+  display: block;
+  margin-bottom: 4px;
+}
+.mensaje time {
+  font-size: 11px;
+  color: #666;
+  margin-top: 4px;
+  display: block;
+}
+
+#input-area {
+  background: white;
+  padding: 16px 20px;
+  box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+#mensaje {
+  flex: 1;
+  padding: 12px 20px;
+  border-radius: 25px;
+  border: 2px solid #e8e8e8;
+  outline: none;
+  font-size: 15px;
+  background: #f8f9fa;
+  transition: all 0.3s;
+}
+#mensaje:focus {
+  border-color: #00a884;
+  box-shadow: 0 0 0 3px rgba(0,168,132,0.1);
+}
+#input-area button {
+  width: 48px;
+  height: 48px;
+  border: none;
+  background: linear-gradient(135deg, #00a884, #00b894);
+  color: white;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 18px;
+  box-shadow: 0 4px 12px rgba(0,168,132,0.3);
+  transition: all 0.2s;
+}
+#input-area button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0,168,132,0.4);
+}
+
+/* TICKETS / TAREAS */
+#seccion-tickets,
+#seccion-tareas {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #f0f2f5;
+  overflow: hidden;
+}
+
+.seccion-header {
+  background: #202c33;
+  color: white;
+  padding: 15px 20px;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.seccion-form {
+  background: white;
+  padding: 15px 20px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #ddd;
+}
+.seccion-form input {
+  flex: 1;
+  min-width: 150px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  font-size: 13px;
+}
+.seccion-form button {
+  padding: 8px 18px;
+  background: #00a884;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.lista {
+  flex: 1;
+  overflow-y: auto;
+  padding: 15px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card {
+  background: white;
+  border-radius: 8px;
+  padding: 12px 15px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.card-info { flex: 1; }
+.card-titulo {
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+.card-meta {
+  font-size: 12px;
+  color: #888;
+}
+.card-acciones {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.card-acciones button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.btn-estado { background: #e8f5e9; color: #2e7d32; }
+.btn-delete { background: #fdecea; color: #c62828; }
+.btn-check  { background: #e3f2fd; color: #1565c0; }
+
+/* Badges de estado */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.badge-abierto     { background: #fff3e0; color: #e65100; }
+.badge-progreso    { background: #e3f2fd; color: #1565c0; }
+.badge-cerrado     { background: #e8f5e9; color: #2e7d32; }
+.badge-pendiente   { background: #fff3e0; color: #e65100; }
+.badge-completada  { background: #e8f5e9; color: #2e7d32; text-decoration: line-through; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login">
+  <h3>💬 Chat SaaS</h3>
+  <input id="user" placeholder="Usuario">
+  <input id="pass" type="password" placeholder="Contraseña">
+  <button onclick="login()">Entrar</button>
+  <button onclick="registro()">Registrarse</button>
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div id="usuario-header">👤 <span id="usuario"></span></div>
+
+    <!-- Tabs -->
+    <div id="nav-tabs">
+      <div class="nav-tab activo" onclick="mostrarSeccion('chat',this)">💬 Chat</div>
+      <div class="nav-tab"       onclick="mostrarSeccion('tickets',this)">🎫 Tickets</div>
+      <div class="nav-tab"       onclick="mostrarSeccion('tareas',this)">✅ Tareas</div>
+    </div>
+
+    <!-- Lista de usuarios (solo se puede ver en chat) -->
+    <div id="usuarios"></div>
+  </div>
+
+  <!-- AREA PRINCIPAL -->
+  <div id="main">
+
+    <!-- CHAT -->
+    <div id="seccion-chat">
+      <div id="chat-header">Selecciona un chat</div>
+      <div id="mensajes"></div>
+      <div id="input-area">
+        <input id="mensaje" placeholder="Escribe un mensaje">
+        <button onclick="enviar()">➤</button>
+      </div>
+    </div>
+
+    <!-- TICKETS -->
+    <div id="seccion-tickets" style="display:none;">
+      <div class="seccion-header">🎫 Tickets de soporte</div>
+      <div class="seccion-form">
+        <input id="ticket-titulo"      placeholder="Título del ticket">
+        <input id="ticket-descripcion" placeholder="Descripción (opcional)">
+        <button onclick="crearTicket()">+ Crear</button>
+      </div>
+      <div class="lista" id="lista-tickets"></div>
+    </div>
+
+    <!-- TAREAS -->
+    <div id="seccion-tareas" style="display:none;">
+      <div class="seccion-header">✅ Tareas</div>
+      <div class="seccion-form">
+        <input id="tarea-titulo"      placeholder="Título de la tarea">
+        <input id="tarea-descripcion" placeholder="Descripción (opcional)">
+        <input id="tarea-asignado"    placeholder="Asignar a (opcional)">
+        <button onclick="crearTarea()">+ Crear</button>
+      </div>
+      <div class="lista" id="lista-tareas"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let usuarioActual = "";
+let chatActual = null;
+
+// NAVEGACION 
+function mostrarSeccion(seccion, tab) {
+  document.getElementById("seccion-chat").style.display    = seccion === "chat"    ? "flex" : "none";
+  document.getElementById("seccion-tickets").style.display = seccion === "tickets" ? "flex" : "none";
+  document.getElementById("seccion-tareas").style.display  = seccion === "tareas"  ? "flex" : "none";
+  document.getElementById("usuarios").style.display        = seccion === "chat"    ? "block": "none";
+
+  document.querySelectorAll(".nav-tab").forEach(t => t.classList.remove("activo"));
+  tab.classList.add("activo");
+
+  if (seccion === "tickets") cargarTickets();
+  if (seccion === "tareas")  cargarTareas();
+}
+
+// AUTENTICACION
+async function login() {
+  const username = user.value.trim();
+  const password = pass.value.trim();
+  if (!username || !password) return alert("Completa los campos");
+
+  const res = await fetch("/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    usuarioActual = data.username || username;
+    document.getElementById("usuario").innerText = usuarioActual;
+    document.getElementById("login").style.display = "none";
+    document.getElementById("app").style.display   = "flex";
+    
+    // Auto-cargar chat
+    mostrarSeccion('chat', document.querySelector('.nav-tab'));
+    cargarUsuarios();
+    setTimeout(() => abrirChat(null), 500); // Espera usuarios cargados
+  } else {
+    alert(data.error || "Error en login");
+  }
+}
+
+async function registro() {
+  const username = user.value.trim();
+  const password = pass.value.trim();
+  if (!username || !password) return alert("Completa los campos");
+
+  const res = await fetch("/registro", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password })
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    // Se auto loguea despues de que el registro fue exitoso
+    alert("✅ Usuario creado!");
+    login(); // Reutiliza user/pass para login auto
+  } else {
+    alert(data.error || "Error en registro");
+  }
+}
+
+// CHAT 
+async function cargarUsuarios() {
+  const res  = await fetch("/usuarios");
+  const data = await res.json();
+  const cont = document.getElementById("usuarios");
+  cont.innerHTML = `<div class="usuario activo" onclick="abrirChat(null,this)">🌍 Chat global</div>`;
+  data.forEach(u => {
+    if (u.username !== usuarioActual) {
+      cont.innerHTML += `<div class="usuario" onclick="abrirChat('${u.username}',this)">👤 ${u.username}</div>`;
+    }
+  });
+}
+
+function abrirChat(usuario, elem) {
+  chatActual = usuario;
+  document.querySelectorAll(".usuario").forEach(u => u.classList.remove("activo"));
+  elem.classList.add("activo");
+  document.getElementById("chat-header").innerText = usuario ? "Chat con " + usuario : "Chat global";
+  cargarMensajes();
+}
+
+async function cargarMensajes() {
+  const res  = await fetch("/mensajes/" + usuarioActual);
+  const data = await res.json();
+  const cont = document.getElementById("mensajes");
+  cont.innerHTML = "";
+
+  data.forEach(m => {
+    if (chatActual) {
+      if (!((m.de === usuarioActual && m.para === chatActual) ||
+            (m.de === chatActual   && m.para === usuarioActual))) return;
+    } else {
+      if (m.para !== null) return;
+    }
+    const tipo = m.de === usuarioActual ? "mio" : "otro";
+    cont.innerHTML += `<div class="mensaje ${tipo}"><b>${m.de}</b><br>${m.mensaje}</div>`;
+  });
+
+  cont.scrollTop = cont.scrollHeight;
+}
+
+async function enviar() {
+  const mensaje = document.getElementById("mensaje").value.trim();
+  if (!mensaje) return;
+
+  await fetch("/mensaje", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ de: usuarioActual, para: chatActual, mensaje })
+  });
+
+  document.getElementById("mensaje").value = "";
+  cargarMensajes();
+}
+
+document.getElementById("mensaje").addEventListener("keypress", e => {
+  if (e.key === "Enter") enviar();
+});
+
+setInterval(() => {
+  if (usuarioActual && chatActual !== undefined) cargarMensajes();
+}, 2000);
+
+// TICKETS 
+async function crearTicket() {
+  const titulo      = document.getElementById("ticket-titulo").value.trim();
+  const descripcion = document.getElementById("ticket-descripcion").value.trim();
+  if (!titulo) return alert("Escribe un título");
+
+  await fetch("/tickets", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ titulo, descripcion, creadoPor: usuarioActual })
+  });
+
+  document.getElementById("ticket-titulo").value = "";
+  document.getElementById("ticket-descripcion").value = "";
+  cargarTickets();
+}
+
+async function cargarTickets() {
+  const res  = await fetch("/tickets");
+  const data = await res.json();
+  const cont = document.getElementById("lista-tickets");
+
+  if (data.length === 0) {
+    cont.innerHTML = "<p style='color:#888;font-size:14px;'>No hay tickets aún.</p>";
+    return;
+  }
+
+  const estadoSiguiente = { "abierto": "en progreso", "en progreso": "cerrado", "cerrado": "abierto" };
+  const badgeClass      = { "abierto": "badge-abierto", "en progreso": "badge-progreso", "cerrado": "badge-cerrado" };
+
+  cont.innerHTML = data.map(t => `
+    <div class="card">
+      <div class="card-info">
+        <div class="card-titulo">${t.titulo}</div>
+        <div class="card-meta">
+          ${t.descripcion ? t.descripcion + " · " : ""}
+          Por: ${t.creadoPor} · 
+          <span class="badge ${badgeClass[t.estado]}">${t.estado}</span>
+        </div>
+      </div>
+      <div class="card-acciones">
+        <button class="btn-estado" onclick="cambiarEstadoTicket('${t._id}','${estadoSiguiente[t.estado]}')">
+          → ${estadoSiguiente[t.estado]}
+        </button>
+        <button class="btn-delete" onclick="eliminarTicket('${t._id}')">🗑</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function cambiarEstadoTicket(id, estado) {
+  await fetch("/tickets/" + id, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ estado })
+  });
+  cargarTickets();
+}
+
+async function eliminarTicket(id) {
+  if (!confirm("¿Eliminar ticket?")) return;
+  await fetch("/tickets/" + id, { method: "DELETE" });
+  cargarTickets();
+}
+
+// TAREAS 
+async function crearTarea() {
+  const titulo      = document.getElementById("tarea-titulo").value.trim();
+  const descripcion = document.getElementById("tarea-descripcion").value.trim();
+  const asignadoA   = document.getElementById("tarea-asignado").value.trim();
+  if (!titulo) return alert("Escribe un título");
+
+  await fetch("/tareas", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ titulo, descripcion, asignadoA, creadoPor: usuarioActual })
+  });
+
+  document.getElementById("tarea-titulo").value = "";
+  document.getElementById("tarea-descripcion").value = "";
+  document.getElementById("tarea-asignado").value = "";
+  cargarTareas();
+}
+
+async function cargarTareas() {
+  const res  = await fetch("/tareas");
+  const data = await res.json();
+  const cont = document.getElementById("lista-tareas");
+
+  if (data.length === 0) {
+    cont.innerHTML = "<p style='color:#888;font-size:14px;'>No hay tareas aún.</p>";
+    return;
+  }
+
+  cont.innerHTML = data.map(t => `
+    <div class="card">
+      <div class="card-info">
+        <div class="card-titulo" style="${t.completada ? 'text-decoration:line-through;color:#aaa;' : ''}">${t.titulo}</div>
+        <div class="card-meta">
+          ${t.descripcion ? t.descripcion + " · " : ""}
+          ${t.asignadoA ? "Para: " + t.asignadoA + " · " : ""}
+          Por: ${t.creadoPor} · 
+          <span class="badge ${t.completada ? 'badge-completada' : 'badge-pendiente'}">
+            ${t.completada ? "completada" : "pendiente"}
+          </span>
+        </div>
+      </div>
+      <div class="card-acciones">
+        <button class="btn-check" onclick="toggleTarea('${t._id}', ${!t.completada})">
+          ${t.completada ? "↩ Reabrir" : "✔ Completar"}
+        </button>
+        <button class="btn-delete" onclick="eliminarTarea('${t._id}')">🗑</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+async function toggleTarea(id, completada) {
+  await fetch("/tareas/" + id, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ completada })
+  });
+  cargarTareas();
+}
+
+async function eliminarTarea(id) {
+  if (!confirm("¿Eliminar tarea?")) return;
+  await fetch("/tareas/" + id, { method: "DELETE" });
+  cargarTareas();
+}
+</script>
+
+</body>
+</html>
